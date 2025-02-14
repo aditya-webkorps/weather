@@ -7,6 +7,7 @@ import 'package:weather_app/location_page.dart';
 import 'package:weather_app/widgets/hourly_forecast_weather_widget.dart';
 import 'package:weather_app/widgets/weekly_forecast_weather_widget.dart';
 
+import 'services/network_service.dart';
 import 'widgets/today_weather_row_item.dart';
 import 'widgets/today_weather_row_widget.dart';
 
@@ -19,6 +20,7 @@ class WeatherPage extends StatefulWidget {
 
 class _WeatherPageState extends State<WeatherPage> {
   bool isNotificationEnabled = true;
+  WeatherResponseModel? weatherResponse;
 
   bool get isNightTime {
     final currentHour = DateTime.now().hour;
@@ -63,13 +65,15 @@ class _WeatherPageState extends State<WeatherPage> {
                       /// LOCATION
                       InkWell(
                         onTap: () async {
-                          Position? position = await Navigator.of(context).push(
+                          // GET THE RESPONSE MODEL FROM LOCATION PAGE
+                          weatherResponse = await Navigator.of(context).push(
                                   MaterialPageRoute(
                                       builder: (context) => LocationPage()))
-                              as Position?;
+                              as WeatherResponseModel?;
 
-                          if (position != null) {
-                            print(position);
+                          if (weatherResponse != null) {
+                            // IF LOCATION RESPONSE IS NOT NULL THEN UPDATE THE UI
+                            setState(() {});
                           }
                         },
                         child: Row(
@@ -82,7 +86,7 @@ class _WeatherPageState extends State<WeatherPage> {
                             ),
                             SizedBox(width: 5.0),
                             Text(
-                              "Pune",
+                              '${weatherResponse?.name ?? 'Select Location'}, ${weatherResponse?.region ?? ''}',
                               style: TextStyles.semiboldWhite20,
                             ),
                             Padding(
@@ -128,7 +132,8 @@ class _WeatherPageState extends State<WeatherPage> {
                 ),
 
                 /// CURRENT TEMPERATURE
-                Text("28°", style: TextStyles.semiboldWhite68),
+                Text("${weatherResponse?.currentTemp ?? '--'}°",
+                    style: TextStyles.semiboldWhite68),
 
                 /// Precipitations
                 Text(
@@ -139,28 +144,30 @@ class _WeatherPageState extends State<WeatherPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Max.:31°',
+                      'Max.:${weatherResponse?.maxTemp ?? '--'}°',
                       style: TextStyles.regularWhite20,
                     ),
                     SizedBox(
                       width: 10.0,
                     ),
                     Text(
-                      'Min.:25°',
+                      'Min.:${weatherResponse?.minTemp ?? '--'}°',
                       style: TextStyles.regularWhite20,
                     )
                   ],
                 ),
 
                 /// TODAY WEATHER
-                CurrentWeatherWidget(isNightTime: isNightTime),
+                CurrentWeatherWidget(
+                    isNightTime: isNightTime, model: weatherResponse),
 
                 SizedBox(
                   height: 10.0,
                 ),
 
                 /// HOURLY FORECAST
-                HourlyForecastWeatherWidget(isNightTime: isNightTime),
+                HourlyForecastWeatherWidget(
+                    isNightTime: isNightTime, model: weatherResponse),
 
                 SizedBox(
                   height: 20.0,

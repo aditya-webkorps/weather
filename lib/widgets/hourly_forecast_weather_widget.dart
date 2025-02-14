@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:weather_app/widgets/hourly_forecast_column_item.dart';
 
 import '../common/text_styles.dart';
+import '../services/network_service.dart';
 
 class HourlyForecastWeatherWidget extends StatelessWidget {
-  const HourlyForecastWeatherWidget({super.key, required this.isNightTime});
+  const HourlyForecastWeatherWidget({
+    super.key,
+    required this.isNightTime,
+    required this.model,
+  });
 
   final bool isNightTime;
+  final WeatherResponseModel? model;
 
   String _getFormattedDate() {
     final date = DateTime.now();
@@ -79,6 +85,44 @@ class HourlyForecastWeatherWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              _buildCelestialInfo(
+                context,
+                Icons.wb_sunny,
+                'Sunrise',
+                model?.sunrise ?? '--',
+              ),
+              _buildCelestialInfo(
+                context,
+                Icons.wb_twilight,
+                'Sunset',
+                model?.sunset ?? '--',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildCelestialInfo(
+                context,
+                Icons.nightlight_round,
+                'Moonrise',
+                _formatTime(DateTime.now()),
+              ),
+              _buildCelestialInfo(
+                context,
+                Icons.nights_stay,
+                'Moonset',
+                _formatTime(DateTime.now()),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(color: Colors.white24),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               HourlyForecastColumnItem(
                   time: '15.00', temp: isNightTime ? '29°C' : '31°C'),
               HourlyForecastColumnItem(
@@ -99,5 +143,44 @@ class HourlyForecastWeatherWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildCelestialInfo(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String time,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white70, size: 20),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              time,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(DateTime? time) {
+    if (time == null) return '--:--';
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 }

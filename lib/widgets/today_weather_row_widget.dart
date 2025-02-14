@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:weather_app/services/network_service.dart';
 
 import 'today_weather_row_item.dart';
 
@@ -6,9 +7,11 @@ class CurrentWeatherWidget extends StatelessWidget {
   const CurrentWeatherWidget({
     super.key,
     required this.isNightTime,
+    required this.model,
   });
 
   final bool isNightTime;
+  final WeatherResponseModel? model;
 
   @override
   Widget build(BuildContext context) {

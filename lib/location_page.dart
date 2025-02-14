@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:weather_app/services/network_service.dart';
 
 import 'common/text_styles.dart';
 
@@ -15,6 +16,7 @@ class _LocationPageState extends State<LocationPage> {
   LocationSettings locationSettings =
       LocationSettings(accuracy: LocationAccuracy.best);
   Position? position;
+  bool isLoading = false;
 
   /// THIS METHOD WILL RETURN THE PERMISSION STATUS
   Future<bool> isLocationPermissionProvided() async {
@@ -91,11 +93,12 @@ class _LocationPageState extends State<LocationPage> {
               const SizedBox(height: 24),
               InkWell(
                 onTap: () async {
+                  isLoading = true;
+                  setState(() {});
                   if (await isLocationPermissionProvided()) {
                     position = await Geolocator.getCurrentPosition(
                         locationSettings: locationSettings);
-
-                    print(position);
+                    isLoading = false;
                     setState(() {});
                   }
                 },
@@ -104,16 +107,18 @@ class _LocationPageState extends State<LocationPage> {
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(15.0)),
                   child: ListTile(
-                    leading: Container(
-                      padding: EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.3)),
-                      child: Icon(
-                        Icons.my_location,
-                        color: Colors.white,
-                      ),
-                    ),
+                    leading: isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Container(
+                            padding: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.3)),
+                            child: Icon(
+                              Icons.my_location,
+                              color: Colors.white,
+                            ),
+                          ),
                     title: Text(
                       "Current Location",
                       style: TextStyles.semiboldWhite20,
@@ -146,8 +151,14 @@ class _LocationPageState extends State<LocationPage> {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(position);
+                    onPressed: () async {
+                      NetworkService networkService = NetworkService();
+
+                      var responseModel = await networkService.getForecastData(
+                        lat: 18.5639113, //position?.latitude ?? 0.0,
+                        long: 73.782828, // position?.longitude ?? 0.0,
+                      );
+                      Navigator.of(context).pop(responseModel);
                     },
                     child: Text("Submit")),
               ),
