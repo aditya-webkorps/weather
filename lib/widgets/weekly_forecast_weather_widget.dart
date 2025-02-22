@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../common/text_styles.dart';
+import '../models/weather_model.dart';
 import 'weekly_day_forecast_widget.dart';
 
 class WeeklyForecastWeatherWidget extends StatelessWidget {
-  const WeeklyForecastWeatherWidget({super.key, required this.isNightTime});
+  const WeeklyForecastWeatherWidget(
+      {super.key, required this.isNightTime, required this.weather});
 
   final bool isNightTime;
+  final WeatherModel? weather;
 
   String _getDayName(int weekday) {
     switch (weekday) {
@@ -61,7 +64,10 @@ class WeeklyForecastWeatherWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           WeeklyDayForecastWidget(
-              day: _getFormattedDate(0), maxTemp: '13°C', minTemp: '10°C'),
+              day: _getFormattedDate(0),
+              maxTemp:
+                  '${weather?.forecast?.forecastday?[0].day?.maxtempC ?? '--'}°C',
+              minTemp: '10°C'),
           const SizedBox(height: 12),
           WeeklyDayForecastWidget(
               day: _getFormattedDate(1), maxTemp: '17°C', minTemp: '12°C'),

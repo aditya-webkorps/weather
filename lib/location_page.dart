@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:weather_app/services/network_service.dart';
+import 'package:weather_app/widgets/google_map_page.dart';
 
 import 'common/text_styles.dart';
 
@@ -40,6 +41,17 @@ class _LocationPageState extends State<LocationPage> {
       return false;
     }
     return true;
+  }
+
+  Future<bool> isGpsServiceEnabled() async {
+    bool isGpsEnabled = false;
+
+    isGpsEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!isGpsEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("GPS services are disabled. Please enable the GPS.")));
+    }
+    return isGpsEnabled;
   }
 
   @override
@@ -95,11 +107,13 @@ class _LocationPageState extends State<LocationPage> {
                 onTap: () async {
                   isLoading = true;
                   setState(() {});
-                  if (await isLocationPermissionProvided()) {
-                    position = await Geolocator.getCurrentPosition(
-                        locationSettings: locationSettings);
-                    isLoading = false;
-                    setState(() {});
+                  if (await isGpsServiceEnabled()) {
+                    if (await isLocationPermissionProvided()) {
+                      position = await Geolocator.getCurrentPosition(
+                          locationSettings: locationSettings);
+                      isLoading = false;
+                      setState(() {});
+                    }
                   }
                 },
                 child: Container(
@@ -147,18 +161,72 @@ class _LocationPageState extends State<LocationPage> {
                   ),
                 ],
               ),
+              SizedBox(
+                height: 20.0,
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => GoogleMapPage()));
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(15.0)),
+                  child: ListTile(
+                    leading: isLoading
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Container(
+                            padding: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.3)),
+                            child: Icon(
+                              Icons.map_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                    title: Text(
+                      "Map Location",
+                      style: TextStyles.semiboldWhite20,
+                    ),
+                    subtitle: Text(
+                      "Using Google Map",
+                      style: TextStyles.regularWhite16
+                          .copyWith(color: Colors.black45),
+                    ),
+                  ),
+                ),
+              ),
               Spacer(),
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: ElevatedButton(
                     onPressed: () async {
-                      NetworkService networkService = NetworkService();
+                      try {
+                        NetworkService networkService = NetworkService();
 
-                      var responseModel = await networkService.getForecastData(
-                        lat: 18.5639113, //position?.latitude ?? 0.0,
-                        long: 73.782828, // position?.longitude ?? 0.0,
-                      );
-                      Navigator.of(context).pop(responseModel);
+                        var responseModel =
+                            await networkService.getForecastData(
+                          lat: position?.latitude,
+                          long: position?.longitude,
+                          userInputLocation: _searchController.text,
+                        );
+
+                        if (responseModel.error != null) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text("${responseModel.error?.message}")));
+                        } else {
+                          Navigator.of(context).pop(responseModel);
+                        }
+                      } catch (ex) {
+                        debugPrint(ex.toString());
+
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                "Something went wrong. Our backend team is working on it.")));
+                      }
                     },
                     child: Text("Submit")),
               ),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:weather_app/models/weather_model.dart';
 import 'package:weather_app/widgets/hourly_forecast_column_item.dart';
 
 import '../common/text_styles.dart';
-import '../services/network_service.dart';
 
 class HourlyForecastWeatherWidget extends StatelessWidget {
   const HourlyForecastWeatherWidget({
@@ -12,7 +12,7 @@ class HourlyForecastWeatherWidget extends StatelessWidget {
   });
 
   final bool isNightTime;
-  final WeatherResponseModel? model;
+  final WeatherModel? model;
 
   String _getFormattedDate() {
     final date = DateTime.now();
@@ -89,13 +89,13 @@ class HourlyForecastWeatherWidget extends StatelessWidget {
                 context,
                 Icons.wb_sunny,
                 'Sunrise',
-                model?.sunrise ?? '--',
+                model?.forecast?.forecastday?[0].astro?.sunrise ?? '--',
               ),
               _buildCelestialInfo(
                 context,
                 Icons.wb_twilight,
                 'Sunset',
-                model?.sunset ?? '--',
+                model?.forecast?.forecastday?[0].astro?.sunrise ?? '--',
               ),
             ],
           ),

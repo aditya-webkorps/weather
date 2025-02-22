@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:weather_app/common/text_styles.dart';
 import 'package:weather_app/location_page.dart';
+import 'package:weather_app/models/weather_model.dart';
 import 'package:weather_app/widgets/hourly_forecast_weather_widget.dart';
 import 'package:weather_app/widgets/weekly_forecast_weather_widget.dart';
 
@@ -20,12 +21,22 @@ class WeatherPage extends StatefulWidget {
 
 class _WeatherPageState extends State<WeatherPage> {
   bool isNotificationEnabled = true;
-  WeatherResponseModel? weatherResponse;
+  WeatherModel? weatherResponse;
 
   bool get isNightTime {
     final currentHour = DateTime.now().hour;
     bool isNight = currentHour < 6 || currentHour > 18;
     return isNight;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1. GET SAVED LOCATION - (LAT, LONG)
+
+    // 2. CALL THE WEATHER API
+    getWeatherApi();
   }
 
   @override
@@ -69,7 +80,7 @@ class _WeatherPageState extends State<WeatherPage> {
                           weatherResponse = await Navigator.of(context).push(
                                   MaterialPageRoute(
                                       builder: (context) => LocationPage()))
-                              as WeatherResponseModel?;
+                              as WeatherModel?;
 
                           if (weatherResponse != null) {
                             // IF LOCATION RESPONSE IS NOT NULL THEN UPDATE THE UI
@@ -86,7 +97,7 @@ class _WeatherPageState extends State<WeatherPage> {
                             ),
                             SizedBox(width: 5.0),
                             Text(
-                              '${weatherResponse?.name ?? 'Select Location'}, ${weatherResponse?.region ?? ''}',
+                              '${weatherResponse?.location?.name ?? 'Select Location'}, ${weatherResponse?.location?.region ?? ''}',
                               style: TextStyles.semiboldWhite20,
                             ),
                             Padding(
@@ -114,25 +125,25 @@ class _WeatherPageState extends State<WeatherPage> {
                 ),
 
                 /// CLOUD STATUS
-                Icon(
-                  FontAwesomeIcons.cloudSunRain,
-                  color: Colors.white,
-                  size: 130.0,
-                ),
-
-                // Image.network(
-                //   "https://cdn.weatherapi.com/weather/64x64/day/113.png",
-                //   width: 130,
-                //   height: 130,
-                //   fit: BoxFit.fill,
+                // Icon(
+                //   FontAwesomeIcons.cloudSunRain,
+                //   color: Colors.white,
+                //   size: 130.0,
                 // ),
+
+                Image.network(
+                  "http:${weatherResponse?.current?.condition?.icon}",
+                  width: 130,
+                  height: 130,
+                  fit: BoxFit.fitHeight,
+                ),
 
                 SizedBox(
                   height: 30.0,
                 ),
 
                 /// CURRENT TEMPERATURE
-                Text("${weatherResponse?.currentTemp ?? '--'}°",
+                Text("${weatherResponse?.current?.tempC ?? '--'}°",
                     style: TextStyles.semiboldWhite68),
 
                 /// Precipitations
@@ -144,14 +155,14 @@ class _WeatherPageState extends State<WeatherPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Max.:${weatherResponse?.maxTemp ?? '--'}°',
+                      'Max.:${weatherResponse?.forecast?.forecastday?[0].day?.maxtempC ?? '--'}°',
                       style: TextStyles.regularWhite20,
                     ),
                     SizedBox(
                       width: 10.0,
                     ),
                     Text(
-                      'Min.:${weatherResponse?.minTemp ?? '--'}°',
+                      'Min.:${weatherResponse?.forecast?.forecastday?[0].day?.mintempC ?? '--'}°',
                       style: TextStyles.regularWhite20,
                     )
                   ],
@@ -176,6 +187,7 @@ class _WeatherPageState extends State<WeatherPage> {
                 /// WEEKLY FORECAST
                 WeeklyForecastWeatherWidget(
                   isNightTime: isNightTime,
+                  weather: weatherResponse,
                 ),
               ],
             ),
@@ -183,5 +195,19 @@ class _WeatherPageState extends State<WeatherPage> {
         ),
       ),
     );
+  }
+
+  Future<void> getWeatherApi() async {
+    // 1. CREATE OBJECT OF NETWORK SERVICE
+    NetworkService networkService = NetworkService();
+
+    var response =
+        await networkService.getForecastData(lat: 12.9898, long: 34.8787);
+
+    if (response.current != null) {
+      weatherResponse = response;
+
+      setState(() {});
+    }
   }
 }

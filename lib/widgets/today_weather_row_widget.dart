@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:weather_app/services/network_service.dart';
 
+import '../models/weather_model.dart';
 import 'today_weather_row_item.dart';
 
 class CurrentWeatherWidget extends StatelessWidget {
@@ -11,7 +12,7 @@ class CurrentWeatherWidget extends StatelessWidget {
   });
 
   final bool isNightTime;
-  final WeatherResponseModel? model;
+  final WeatherModel? model;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,7 @@ class CurrentWeatherWidget extends StatelessWidget {
           ),
           TodayWeatherRowItem(
             imagePath: "assets/icons/humidity.svg",
-            value: '90%',
+            value: '${model?.current?.humidity}%',
           ),
           TodayWeatherRowItem(
             imagePath: "assets/icons/wind.svg",
