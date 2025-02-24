@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:weather_app/services/network_service.dart';
 import 'package:weather_app/widgets/google_map_page.dart';
 
@@ -165,9 +166,18 @@ class _LocationPageState extends State<LocationPage> {
                 height: 20.0,
               ),
               InkWell(
-                onTap: () {
-                  Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => GoogleMapPage()));
+                onTap: () async {
+                  LatLng? selectedPosition = await Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context) => GoogleMapPage())) as LatLng?;
+
+                  if (selectedPosition != null) {
+                    callWeatherApi(
+                        selectedPosition.latitude, selectedPosition.longitude);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Please select valid location")));
+                  }
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -203,30 +213,7 @@ class _LocationPageState extends State<LocationPage> {
                 padding: const EdgeInsets.all(10.0),
                 child: ElevatedButton(
                     onPressed: () async {
-                      try {
-                        NetworkService networkService = NetworkService();
-
-                        var responseModel =
-                            await networkService.getForecastData(
-                          lat: position?.latitude,
-                          long: position?.longitude,
-                          userInputLocation: _searchController.text,
-                        );
-
-                        if (responseModel.error != null) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content:
-                                  Text("${responseModel.error?.message}")));
-                        } else {
-                          Navigator.of(context).pop(responseModel);
-                        }
-                      } catch (ex) {
-                        debugPrint(ex.toString());
-
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text(
-                                "Something went wrong. Our backend team is working on it.")));
-                      }
+                      callWeatherApi(position?.latitude, position?.longitude);
                     },
                     child: Text("Submit")),
               ),
@@ -235,5 +222,30 @@ class _LocationPageState extends State<LocationPage> {
         ),
       ),
     );
+  }
+
+  void callWeatherApi(double? latitude, double? longitude) async {
+    try {
+      NetworkService networkService = NetworkService();
+
+      var responseModel = await networkService.getForecastData(
+        lat: latitude,
+        long: longitude,
+        userInputLocation: _searchController.text,
+      );
+
+      if (responseModel.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("${responseModel.error?.message}")));
+      } else {
+        Navigator.of(context).pop(responseModel);
+      }
+    } catch (ex) {
+      debugPrint(ex.toString());
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "Something went wrong. Our backend team is working on it.")));
+    }
   }
 }
